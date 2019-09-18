@@ -10,7 +10,7 @@ restApiHandlerRec = RestApiHandlerRec()
 MARGIN = 1.20
 
 def main():
-    upload_products(5)
+    upload_products(100)
     #delete_products()
 
 def upload_products(qty):

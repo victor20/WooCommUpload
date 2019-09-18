@@ -136,44 +136,20 @@ class RestApiHandlerRec:
 
     def add_category_images2(self, current_category):
         sub_images = []
+        current_images = []
         for subcat in current_category.sub_categories:
-            return_images = self.add_category_images2(subcat)
-            print(return_images)
-            if return_images:
-                sub_images.extend(return_images)
+            sub_images.extend(self.add_category_images3(subcat))
 
-        if current_category.products:
-            images = []
-            for product in current_category.products:
-                if product.remote_image_ids:
-                    images.extend(product.remote_image_ids)
+        for product in current_category.products:
+            current_images.extend(product.remote_image_ids)
 
-            print(images)
-
-            if current_category.image_id:
-                if sub_images:
-                    return images.extend(sub_images)
-                else:
-                    return images
-            else:
-                if images:
-                    self.wooApiHandler.update_category_image(current_category, images[0])
-                    print(images)
-
-                    if sub_images:
-                        return images.extend(sub_images)
-                    else:
-                        return images
-                else:
-                    return []
+        if current_images:
+            self.wooApiHandler.update_category_image(current_category, current_images[0])
         else:
-
             if sub_images:
                 self.wooApiHandler.update_category_image(current_category, sub_images[0])
-                return sub_images
-            else:
-                return []
 
+        return sub_images + current_images
 
     def print_tree(self):
         self.print_title("current tree")
