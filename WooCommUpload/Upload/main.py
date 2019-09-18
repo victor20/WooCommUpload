@@ -10,14 +10,14 @@ restApiHandlerRec = RestApiHandlerRec()
 MARGIN = 1.20
 
 def main():
-    upload_products(52)
+    upload_products(5)
     #delete_products()
 
 def upload_products(qty):
     products = dynamoHandler.get_products(qty)
     count = 0
     for product in products:
-        #add_product_img_ref(product)
+        add_product_img_ref(product)
         add_product_out_price(product)
         #product.print_product()
         count += 1

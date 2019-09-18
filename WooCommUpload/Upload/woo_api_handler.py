@@ -146,6 +146,17 @@ class WooApiHandler:
 
         return woo_product
 
+    def update_category_image(self, category, img_ref):
+        data = {
+            "image": {"id": img_ref}
+        }
+
+        request = "products/categories/" + str(category.remote_id)
+        update_category_image_response = self.wcapi.put(request, data).json()
+
+        #print(json.dumps(update_category_image_response, indent=4, sort_keys=True))
+
+
     def force_delete_all_products(self):
         params = {"per_page": "100"}
         response_get = self.wcapi.get("products", params=params).json()

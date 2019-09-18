@@ -6,6 +6,7 @@ class Category:
         self.sub_categories = []
         self.products = []
         self.parent_remote_id = None
+        self.image_id = None
 
     def print_category(self, level):
         print("")

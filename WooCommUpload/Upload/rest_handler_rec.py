@@ -20,6 +20,8 @@ class RestApiHandlerRec:
         self.add_local_products(products)
         self.upload_products_to_be_uploaded(self.products_to_be_uploaded)
 
+        self.add_category_images()
+
     def add_remote_categories(self):
         self.add_remote_categories2(self.root_category)
         #self.print_tree()
@@ -124,6 +126,55 @@ class RestApiHandlerRec:
 
         print("PRODUCTS UPLOADED: " + str(count))
 
+        for remote_product in remote_products:
+            self.add_remote_product(remote_product, self.root_category)
+
+        self.print_tree()
+
+    def add_category_images(self):
+        self.add_category_images2(self.root_category)
+
+    def add_category_images2(self, current_category):
+        sub_images = []
+        for subcat in current_category.sub_categories:
+            return_images = self.add_category_images2(subcat)
+            print(return_images)
+            if return_images:
+                sub_images.extend(return_images)
+
+        if current_category.products:
+            images = []
+            for product in current_category.products:
+                if product.remote_image_ids:
+                    images.extend(product.remote_image_ids)
+
+            print(images)
+
+            if current_category.image_id:
+                if sub_images:
+                    return images.extend(sub_images)
+                else:
+                    return images
+            else:
+                if images:
+                    self.wooApiHandler.update_category_image(current_category, images[0])
+                    print(images)
+
+                    if sub_images:
+                        return images.extend(sub_images)
+                    else:
+                        return images
+                else:
+                    return []
+        else:
+
+            if sub_images:
+                self.wooApiHandler.update_category_image(current_category, sub_images[0])
+                return sub_images
+            else:
+                return []
+
+
     def print_tree(self):
         self.print_title("current tree")
         self.print_tree2(0, self.root_category)
@@ -134,6 +185,7 @@ class RestApiHandlerRec:
         if level == 3:
             for product in current_category.products:
                 print("                    " + product.product_name)
+                #product.print_remote_product()
 
         for category in current_category.sub_categories:
             self.print_tree2(level + 1, category)
