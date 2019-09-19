@@ -1,3 +1,11 @@
+"""
+Settings for wp-config.php
+@ini_set ( 'max_input_vars' , 2000 );
+set_time_limit( 600 );
+define( 'WP_MEMORY_LIMIT', '256M' ); 
+
+"""
+
 from woocommerce import API
 import json
 import html
@@ -93,7 +101,10 @@ class WooApiHandler:
             return ""
 
     def upload_products(self, products):
-        """When batch upload fails try to upload single products"""
+        """
+        When batch upload fails try to upload single products
+        Raise batch size to 100
+        """
 
         self.print_title("uploading products")
 
@@ -114,17 +125,20 @@ class WooApiHandler:
                     create.append(self.create_woo_product(product))
 
             data['create'] = create
-            batch_upload_response = self.wcapi.post("products/batch", data).json()
 
-            if "create" in batch_upload_response.keys():
-                uploaded_products.extend(self.create_remote_products(batch_upload_response))
-            else:
-                print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
+            try:
+                batch_upload_response = self.wcapi.post("products/batch", data).json()
+
+                if "create" in batch_upload_response.keys():
+                    uploaded_products.extend(self.create_remote_products(batch_upload_response))
+                else:
+                    print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
+            except:
+                print("An exception occurred")
 
         return uploaded_products
 
     def create_remote_products(self, batch_upload_response):
-
 
         #print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
         #print(batch_upload_response['create'])
@@ -132,16 +146,12 @@ class WooApiHandler:
         uploaded_products = []
         woo_products = batch_upload_response['create']
 
-
         for woo_product in woo_products:
             uploaded_products.append(self.create_remote_product(woo_product))
             self.products_uploaded += 1
 
-
-
         #for uploaded_product in uploaded_products:
         #    uploaded_product.print_remote_product()
-
 
         print(str(self.products_uploaded) + " TOTAL PRODUCTS UPLOADED")
 
