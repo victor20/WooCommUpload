@@ -17,6 +17,8 @@ class WooApiHandler:
             timeout=cred.timeout)
 
     def get_sub_categories(self, parent_id):
+        """CHANGE WOO PAGE"""
+
         params = {"per_page": "100", "parent": parent_id}
         get_sub_categories_response = self.wcapi.get("products/categories", params=params).json()
 

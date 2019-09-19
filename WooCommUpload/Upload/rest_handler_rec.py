@@ -26,7 +26,6 @@ class RestApiHandlerRec:
         print("Adding remote categories")
 
         self.add_remote_categories2(self.root_category)
-        #self.print_tree()
 
         print("")
         print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
@@ -51,7 +50,6 @@ class RestApiHandlerRec:
         remote_products = self.wooApiHandler.get_products()
 
         for remote_product in remote_products:
-            #remote_product.print_remote_product()
 
             start = time.time()
             self.add_remote_product(remote_product, self.root_category)
@@ -77,7 +75,6 @@ class RestApiHandlerRec:
 
         for product in products:
             self.add_local_product(product, 0, self.root_category)
-        #self.print_tree()
 
         print("")
         print(str(self.categories_uploaded_count) + " CATEGORIES UPLOADED")
@@ -122,20 +119,16 @@ class RestApiHandlerRec:
                     self.categories_uploaded_count += 1
 
     def upload_products_to_be_uploaded(self, products):
-        #self.print_title("products to be uploaded")
         count = 0
         for product in products:
-            #product.print_product()
             count += 1
 
         print("PRODUCTS TO BE UPLOADED: " + str(count))
 
         remote_products = self.wooApiHandler.upload_products(products)
 
-        #self.print_title("uploaded products")
         count = 0
         for product in remote_products:
-            #product.print_product()
             count += 1
 
         print("PRODUCTS UPLOADED: " + str(count))
