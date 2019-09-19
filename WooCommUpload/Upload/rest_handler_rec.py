@@ -10,7 +10,7 @@ class RestApiHandlerRec:
         self.root_category = Category("root", 0)
         self.products_to_be_uploaded = []
 
-        self.remote_products_count = 0
+        self.remote_categories_count = 0
         self.categories_uploaded_count = 0
 
     def upload_products(self, products):
@@ -29,24 +29,24 @@ class RestApiHandlerRec:
         #self.print_tree()
 
         print("")
-        print(str(self.remote_products_count) + " REMOTE CATEGORIES")
+        print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
         print("")
 
     def add_remote_categories2(self, current_category):
 
-        """
-        Denna verkar inte fungera korrekt. När du laddar upp kategorier igen
-        försöker den ladda upp redan existerande kategorier
-        """
-
         sub_categories = self.wooApiHandler.get_sub_categories(current_category.remote_id)
+
         if len(sub_categories) > 0:
             current_category.sub_categories = sub_categories
             for sub_category in sub_categories:
-                self.remote_products_count += 1
+                self.remote_categories_count += 1
+                print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
                 self.add_remote_categories2(sub_category)
 
     def add_remote_products(self):
+
+        print("")
+        print("Adding remote products")
 
         remote_products = self.wooApiHandler.get_products()
 
@@ -72,7 +72,8 @@ class RestApiHandlerRec:
 
     def add_local_products(self, products):
 
-        print("Adding categories")
+        print("")
+        print("Adding local categories")
 
         for product in products:
             self.add_local_product(product, 0, self.root_category)
@@ -151,7 +152,7 @@ class RestApiHandlerRec:
         sub_images = []
         current_images = []
         for subcat in current_category.sub_categories:
-            sub_images.extend(self.add_category_images3(subcat))
+            sub_images.extend(self.add_category_images2(subcat))
 
         for product in current_category.products:
             current_images.extend(product.remote_image_ids)

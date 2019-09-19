@@ -19,15 +19,18 @@ class WooApiHandler:
     def get_sub_categories(self, parent_id):
         params = {"per_page": "100", "parent": parent_id}
         get_sub_categories_response = self.wcapi.get("products/categories", params=params).json()
+
         remote_sub_categories = []
+        count = 0
         for item in get_sub_categories_response:
             remote_sub_categories.append(self.create_remote_category(item))
+            count += 1
 
         return remote_sub_categories
 
     def create_remote_category(self, item):
         #print(json.dumps(item, indent=4, sort_keys=True))
-        category = Category(item['name'], item['id'])
+        category = Category(html.unescape(item['name']), item['id'])
         category.parent_remote_id = item['parent']
         #category.print_category(1)
 
@@ -36,13 +39,18 @@ class WooApiHandler:
     def get_products(self):
         remote_products = []
         count = 0
+        page = 1
         while True:
-
-            params = {"per_page": "100"}
+            params = {
+                "per_page": "100",
+                "page": page
+            }
             get_products_response = self.wcapi.get("products", params=params).json()
             for woo_product_item in get_products_response:
                 remote_products.append(self.create_remote_product(woo_product_item))
                 count += 1
+            page += 1
+            print("DOWLOADED " + str(count) + " PRODUCTS")
             if len(get_products_response) < 100:
                 break
 
@@ -63,7 +71,7 @@ class WooApiHandler:
             supplier_product_id = woo_product_item['sku'],
             remote_product_id = woo_product_item['id'],
             remote_category_id = remote_category_id,
-            product_name = woo_product_item['name'],
+            product_name = html.unescape(woo_product_item['name']),
             remote_image_ids = remote_image_ids)
 
         return remoteProduct
@@ -99,9 +107,11 @@ class WooApiHandler:
 
             data['create'] = create
             batch_upload_response = self.wcapi.post("products/batch", data).json()
-            #print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
 
-            uploaded_products.extend(self.create_remote_products(batch_upload_response))
+            if "create" in batch_upload_response.keys():
+                uploaded_products.extend(self.create_remote_products(batch_upload_response))
+            else:
+                print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
 
         return uploaded_products
 
