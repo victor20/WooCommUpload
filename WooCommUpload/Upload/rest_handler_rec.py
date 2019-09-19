@@ -23,7 +23,7 @@ class RestApiHandlerRec:
         self.add_category_images()
 
     def add_remote_categories(self):
-        print("Adding remote categories")
+        self.print_title("Adding remote categories")
 
         self.add_remote_categories2(self.root_category)
 
@@ -43,9 +43,7 @@ class RestApiHandlerRec:
                 self.add_remote_categories2(sub_category)
 
     def add_remote_products(self):
-
-        print("")
-        print("Adding remote products")
+        self.print_title("Adding remote products")
 
         remote_products = self.wooApiHandler.get_products()
 
@@ -69,9 +67,7 @@ class RestApiHandlerRec:
             self.add_remote_product(remote_product, subcat)
 
     def add_local_products(self, products):
-
-        print("")
-        print("Adding local categories")
+        self.print_title("Adding local categories")
 
         for product in products:
             self.add_local_product(product, 0, self.root_category)
@@ -161,6 +157,9 @@ class RestApiHandlerRec:
     def print_tree(self):
         self.print_title("current tree")
         self.print_tree2(0, self.root_category)
+
+        print("")
+        print("----------")
 
     def print_tree2(self, level, current_category):
         current_category.print_category_short(level)

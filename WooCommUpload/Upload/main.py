@@ -22,7 +22,7 @@ def upload_products(qty):
     last_count = 0
 
     print("")
-    print("Downloading images")
+    print("Adding prices and downloading images")
     print("")
 
     for product in products:
@@ -43,7 +43,9 @@ def upload_products(qty):
             last_count = count
 
     print("")
-    print(str(count) + " PRODUCTS CREATED BY DYNAMO HANDLER")
+    print(str(count) + " PRODUCTS PRICED |" +
+          " WITH IMG: " + str(count_products_with_img) +
+          " - WITHOUT IMG: " + str(count_products_without_img))
     print("")
     restApiHandlerRec.upload_products(products)
 

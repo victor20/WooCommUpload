@@ -16,6 +16,8 @@ class WooApiHandler:
             version=cred.version,
             timeout=cred.timeout)
 
+        self.products_uploaded = 0
+
     def get_sub_categories(self, parent_id):
         """CHANGE WOO PAGE"""
 
@@ -91,6 +93,10 @@ class WooApiHandler:
             return ""
 
     def upload_products(self, products):
+        """When batch upload fails try to upload single products"""
+
+        self.print_title("uploading products")
+
         uploaded_products = []
 
         while products:
@@ -118,9 +124,7 @@ class WooApiHandler:
         return uploaded_products
 
     def create_remote_products(self, batch_upload_response):
-        print("")
-        print("----------")
-        print("")
+
 
         #print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
         #print(batch_upload_response['create'])
@@ -128,15 +132,18 @@ class WooApiHandler:
         uploaded_products = []
         woo_products = batch_upload_response['create']
 
-        count = 0
+
         for woo_product in woo_products:
             uploaded_products.append(self.create_remote_product(woo_product))
-            count += 1
+            self.products_uploaded += 1
 
-        print(str(count) + " TOTAL PRODUCTS UPLOADED")
+
 
         #for uploaded_product in uploaded_products:
         #    uploaded_product.print_remote_product()
+
+
+        print(str(self.products_uploaded) + " TOTAL PRODUCTS UPLOADED")
 
         return  uploaded_products
 
