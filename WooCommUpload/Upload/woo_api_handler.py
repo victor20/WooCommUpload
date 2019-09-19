@@ -26,9 +26,10 @@ class WooApiHandler:
         return remote_sub_categories
 
     def create_remote_category(self, item):
-        # print(json.dumps(item, indent=4, sort_keys=True))
+        #print(json.dumps(item, indent=4, sort_keys=True))
         category = Category(item['name'], item['id'])
         category.parent_remote_id = item['parent']
+        #category.print_category(1)
 
         return category
 
@@ -73,10 +74,10 @@ class WooApiHandler:
         # print(json.dumps(response, indent=4, sort_keys=True))
 
         if "id" in response.keys():
-            # print("    Uploaded: " + name + " ---> " + str(response['id']))
+            print("    Uploaded: " + name + " ---> " + str(response['id']))
             return response['id']
         else:
-            # print("Not Uploaded")
+            print("Not Uploaded")
             return ""
 
     def upload_products(self, products):

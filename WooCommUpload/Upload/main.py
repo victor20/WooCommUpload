@@ -10,17 +10,28 @@ restApiHandlerRec = RestApiHandlerRec()
 MARGIN = 1.20
 
 def main():
-    upload_products(100)
+    upload_products(None)
     #delete_products()
 
 def upload_products(qty):
+
     products = dynamoHandler.get_products(qty)
     count = 0
+    last_count = 0
+
+    print("")
+    print("Downloading images")
+    print("")
+
     for product in products:
-        add_product_img_ref(product)
+        #add_product_img_ref(product)
         add_product_out_price(product)
         #product.print_product()
         count += 1
+        if count - last_count > 299:
+            print(str(count) + " PRODUCTS HAS IMAGE REFS")
+            last_count = count
+
 
     print("")
     print(str(count) + " PRODUCTS CREATED BY DYNAMO HANDLER")

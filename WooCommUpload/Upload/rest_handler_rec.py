@@ -23,6 +23,8 @@ class RestApiHandlerRec:
         self.add_category_images()
 
     def add_remote_categories(self):
+        print("Adding remote categories")
+
         self.add_remote_categories2(self.root_category)
         #self.print_tree()
 
@@ -31,6 +33,12 @@ class RestApiHandlerRec:
         print("")
 
     def add_remote_categories2(self, current_category):
+
+        """
+        Denna verkar inte fungera korrekt. När du laddar upp kategorier igen
+        försöker den ladda upp redan existerande kategorier
+        """
+
         sub_categories = self.wooApiHandler.get_sub_categories(current_category.remote_id)
         if len(sub_categories) > 0:
             current_category.sub_categories = sub_categories
@@ -63,6 +71,8 @@ class RestApiHandlerRec:
             self.add_remote_product(remote_product, subcat)
 
     def add_local_products(self, products):
+
+        print("Adding categories")
 
         for product in products:
             self.add_local_product(product, 0, self.root_category)
@@ -99,7 +109,10 @@ class RestApiHandlerRec:
 
             if not match:
                 category_name = product.categories[level]
+                print("")
+                print("Adding " + str(category_name))
                 remote_id = self.wooApiHandler.add_category(category_name, current_category.remote_id)
+
                 if remote_id:
                     category = Category(category_name, remote_id)
                     current_category.sub_categories.append(category)
