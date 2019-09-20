@@ -89,7 +89,7 @@ class WooApiHandler:
         return remoteProduct
 
     def add_category(self, name, pId):
-        data = {"name": name, "display": "both", "parent": pId}
+        data = {"name": name, "display": "default", "parent": pId}
         response = self.wcapi.post("products/categories", data).json()
         # print(json.dumps(response, indent=4, sort_keys=True))
 
