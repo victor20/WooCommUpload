@@ -187,19 +187,19 @@ class WooApiHandler:
         #print(json.dumps(update_category_image_response, indent=4, sort_keys=True))
 
     def update_category_display(self, category, level):
-        if level == 1:
+        if level == 1 or level == 2:
             data = {
                 "display": "subcategories"
             }
-            print("Setting " + category.name + " to subcategories")
+            print(category.name + " ---> subcategories")
         else:
             data = {
                 "display": "default"
             }
-            print("Setting " + category.name + " to default")
+            print(category.name + " ---> default")
 
         request = "products/categories/" + str(category.remote_id)
-        update_category_display = self.wcapi.put(request, data).json()
+        update_category_display_response = self.wcapi.put(request, data).json()
 
 
     def force_delete_all_products(self):

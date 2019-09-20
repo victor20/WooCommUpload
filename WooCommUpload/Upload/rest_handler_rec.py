@@ -6,6 +6,8 @@ import time
 class RestApiHandlerRec:
 
     def __init__(self):
+        self.CATEGORY_MAX_DEPTH = 3
+
         self.wooApiHandler = WooApiHandler()
         self.root_category = Category("root", 0)
         self.products_to_be_uploaded = []
@@ -26,18 +28,18 @@ class RestApiHandlerRec:
         self.add_remote_categories()
 
         self.print_title("Updating category display")
-        self.update_category_display2(self, self.root_category, 0)
+        self.update_category_display2(self.root_category, 0)
 
     def add_remote_categories(self):
         self.print_title("Adding remote categories")
 
-        self.add_remote_categories2(self.root_category)
+        self.add_remote_categories2(self.root_category, 0)
 
         print("")
         print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
         print("")
 
-    def add_remote_categories2(self, current_category):
+    def add_remote_categories2(self, current_category, level):
 
         sub_categories = self.wooApiHandler.get_sub_categories(current_category.remote_id)
 
@@ -45,8 +47,10 @@ class RestApiHandlerRec:
             current_category.sub_categories = sub_categories
             for sub_category in sub_categories:
                 self.remote_categories_count += 1
-                print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
-                self.add_remote_categories2(sub_category)
+                if level < self.CATEGORY_MAX_DEPTH:
+                    self.add_remote_categories2(sub_category, level + 1)
+
+            print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
 
     def add_remote_products(self):
         self.print_title("Adding remote products")
