@@ -10,8 +10,9 @@ restApiHandlerRec = RestApiHandlerRec()
 MARGIN = 1.20
 
 def main():
-    upload_products(None)
+    #upload_products(None)
     #delete_products()
+    update_category_display()
 
 def upload_products(qty):
 
@@ -60,6 +61,9 @@ def upload_product_by_id(supplier_product_id):
     for product in products:
         product.print_product()
     restApiHandlerRec.upload_products(products)
+
+def update_category_display():
+    restApiHandlerRec.update_category_display()
 
 def delete_products():
     restApiHandlerRec.delete_all_products()
