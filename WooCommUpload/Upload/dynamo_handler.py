@@ -13,6 +13,7 @@ class DynamoHandler:
             region_name=cred.region_name)
 
         self.emo_products = dynamo_db.Table(cred.table_name)
+        self.c_products = dynamo_db.Table(cred.table_name)
 
 
     def get_product_by_id(self, supplier_product_id):
@@ -104,5 +105,4 @@ class DynamoHandler:
         attributes.append({"name": "Volym", "visible": True, "options": [volume]})
 
         return attributes
-
 

@@ -3,3 +3,4 @@ venv/
 .idea/
 WooCommUpload/Config/
 WooCommUpload/Misc/
+WooCommUpload/Margin/

@@ -44,6 +44,10 @@ class WooApiHandler:
         #print(json.dumps(item, indent=4, sort_keys=True))
         category = Category(html.unescape(item['name']), item['id'])
         category.parent_remote_id = item['parent']
+        if item['image']:
+            category.image_id = item['image']['id']
+        else:
+            category.image_id = None
         #category.print_category(1)
 
         return category
@@ -79,12 +83,23 @@ class WooApiHandler:
         for remote_image in woo_product_item['images']:
             remote_image_ids.append(remote_image['id'])
 
+        product_out_price = float(woo_product_item['regular_price'])
+        product_out_price = "{0:.2f}".format(product_out_price)
+
         remoteProduct = RemoteProduct(
             supplier_product_id = woo_product_item['sku'],
             remote_product_id = woo_product_item['id'],
             remote_category_id = remote_category_id,
             product_name = html.unescape(woo_product_item['name']),
-            remote_image_ids = remote_image_ids)
+            remote_image_ids = remote_image_ids,
+            product_out_price = product_out_price)
+
+        if woo_product_item['sale_price'] != "":
+            product_discount_price = float(woo_product_item['sale_price'])
+            product_discount_price = "{0:.2f}".format(product_discount_price)
+            remoteProduct.product_discount_price = product_discount_price
+        else:
+            remoteProduct.product_discount_price = "0.0"
 
         return remoteProduct
 
@@ -100,13 +115,16 @@ class WooApiHandler:
             print("Not Uploaded")
             return ""
 
-    def upload_products(self, products):
+    def upload_products(self, products, update):
         """
         When batch upload fails try to upload single products
         Raise batch size to 100
         """
 
-        self.print_title("uploading products")
+        if update:
+            self.print_title("updating products")
+        else:
+            self.print_title("uploading products")
 
         uploaded_products = []
 
@@ -122,19 +140,25 @@ class WooApiHandler:
             create = []
             for product in product_batch:
                 if not product.supplier_product_id == "148902":
-                    create.append(self.create_woo_product(product))
+                    if update:
+                        create.append(self.create_woo_update_product(product))
+                    else:
+                        create.append(self.create_woo_product(product))
 
-            data['create'] = create
+            if update:
+                data['update'] = create
+            else:
+                data['create'] = create
 
-            try:
-                batch_upload_response = self.wcapi.post("products/batch", data).json()
+            #try:
+            batch_upload_response = self.wcapi.post("products/batch", data).json()
 
-                if "create" in batch_upload_response.keys():
-                    uploaded_products.extend(self.create_remote_products(batch_upload_response))
-                else:
-                    print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
-            except:
-                print("An exception occurred")
+            if "create" or "update" in batch_upload_response.keys():
+                uploaded_products.extend(self.create_remote_products(batch_upload_response))
+            else:
+                print(json.dumps(batch_upload_response, indent=4, sort_keys=True))
+            #except:
+                #print("An exception occurred")
 
         return uploaded_products
 
@@ -144,18 +168,44 @@ class WooApiHandler:
         #print(batch_upload_response['create'])
 
         uploaded_products = []
-        woo_products = batch_upload_response['create']
+        if "create" in batch_upload_response.keys():
+            woo_products = batch_upload_response['create']
 
-        for woo_product in woo_products:
-            uploaded_products.append(self.create_remote_product(woo_product))
-            self.products_uploaded += 1
+            for woo_product in woo_products:
+                uploaded_products.append(self.create_remote_product(woo_product))
+                self.products_uploaded += 1
 
-        #for uploaded_product in uploaded_products:
-        #    uploaded_product.print_remote_product()
+            #for uploaded_product in uploaded_products:
+            #    uploaded_product.print_remote_product()
 
-        print(str(self.products_uploaded) + " TOTAL PRODUCTS UPLOADED")
+            print(str(self.products_uploaded) + " TOTAL PRODUCTS UPLOADED")
+
+        if "update" in batch_upload_response.keys():
+            woo_products = batch_upload_response['update']
+
+            for woo_product in woo_products:
+                uploaded_products.append(self.create_remote_product(woo_product))
+                self.products_uploaded += 1
+
+            # for uploaded_product in uploaded_products:
+            #    uploaded_product.print_remote_product()
+
+            print(str(self.products_uploaded) + " TOTAL PRODUCTS UPDATED")
 
         return  uploaded_products
+
+    def create_woo_update_product(self, product):
+        woo_product = {}
+
+        woo_product['id'] = product.remote_product_id
+        woo_product['regular_price'] = product.product_out_price
+
+        if product.product_discount_price != "0.0":
+            woo_product['sale_price'] = product.product_discount_price
+        else:
+            woo_product['sale_price'] = ""
+
+        return woo_product
 
     def create_woo_product(self, product):
         woo_product = {}
@@ -168,6 +218,10 @@ class WooApiHandler:
         woo_product['name'] = product.product_name
         woo_product['type'] = "simple"
         woo_product['regular_price'] = product.product_out_price
+        if product.product_discount_price != "0.0":
+            woo_product['sale_price'] = product.product_discount_price
+        else:
+            woo_product['sale_price'] = ""
 
         woo_product['description'] = product.product_description
         woo_product['short_description'] = product.product_description

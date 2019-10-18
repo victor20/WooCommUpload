@@ -6,11 +6,17 @@ import time
 class RestApiHandlerRec:
 
     def __init__(self):
+        self.UPLOAD = True
+        self.UPDATE = True
+        self.CREATE_CATEGORY_IMAGES = False
+        self.UPDATE_CATEGORY_DISPLAY_TYPE = False
+
         self.CATEGORY_MAX_DEPTH = 3
 
         self.wooApiHandler = WooApiHandler()
         self.root_category = Category("root", 0)
         self.products_to_be_uploaded = []
+        self.products_to_be_updated = []
 
         self.remote_categories_count = 0
         self.categories_uploaded_count = 0
@@ -21,16 +27,30 @@ class RestApiHandlerRec:
 
         self.add_local_products(products)
         self.upload_products_to_be_uploaded(self.products_to_be_uploaded)
+        self.upload_products_to_be_updated(self.products_to_be_updated)
 
-        self.add_category_images()
+        if self.CREATE_CATEGORY_IMAGES:
+            self.add_category_images()
+
+        if self.UPDATE_CATEGORY_DISPLAY_TYPE:
+            self.update_category_display()
 
     def update_category_display(self):
+        """
+        Updates the category display settings
+        Default | Products | Products + categories etc...
+        """
+
         self.add_remote_categories()
 
         self.print_title("Updating category display")
         self.update_category_display2(self.root_category, 0)
 
     def add_remote_categories(self):
+        """
+        Adds remote categories to the local category/product tree
+        """
+
         self.print_title("Adding remote categories")
 
         self.add_remote_categories2(self.root_category, 0)
@@ -40,6 +60,9 @@ class RestApiHandlerRec:
         print("")
 
     def add_remote_categories2(self, current_category, level):
+        """
+        Recursive function for add_remote_categories
+        """
 
         sub_categories = self.wooApiHandler.get_sub_categories(current_category.remote_id)
 
@@ -53,6 +76,10 @@ class RestApiHandlerRec:
             print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
 
     def add_remote_products(self):
+        """
+        Adds remote products to the local category/product tree
+        """
+
         self.print_title("Adding remote products")
 
         remote_products = self.wooApiHandler.get_products()
@@ -67,6 +94,9 @@ class RestApiHandlerRec:
         self.print_tree()
 
     def add_remote_product(self, remote_product, current_category):
+        """
+        Recursive function for add_remote_products
+        """
 
         for subcat in current_category.sub_categories:
             if subcat.remote_id == remote_product.remote_category_id:
@@ -77,6 +107,11 @@ class RestApiHandlerRec:
             self.add_remote_product(remote_product, subcat)
 
     def add_local_products(self, products):
+        """
+        Uploads categories to WooCommerce that does not exist on the site.
+        Adds products to the products_to_be_uploaded  list that does not exist on site
+        """
+
         self.print_title("Adding local categories")
 
         for product in products:
@@ -87,24 +122,36 @@ class RestApiHandlerRec:
         print("")
 
     def add_local_product(self, product, level, current_category):
+        """
+        Recursive function for add_local_products
+        """
 
         if level == len(product.categories):
+            # PRODUCTS
 
-            """
-            if product.remote_product_id:
-                current_category.products.append(product)
-            """
-
+            curent_remote_product = None
             match = False
             for remote_product in current_category.products:
                 if product.supplier_product_id == remote_product.supplier_product_id:
+                    curent_remote_product = remote_product
                     match = True
 
-            if not match:
+            if self.UPLOAD and not match:
                 product.remote_category_id = current_category.remote_id
                 self.products_to_be_uploaded.append(product)
 
+            elif self.UPDATE and match:
+                # Check difference between local and remote product and add
+                # remote product to products_to_be_updated if there is a
+                # difference
+                if self.compare_products(product, curent_remote_product):
+                    curent_remote_product.product_out_price = product.product_out_price
+                    curent_remote_product.product_discount_price = product.product_discount_price
+                    self.products_to_be_updated.append(curent_remote_product)
+
         else:
+            # CATEGORIES
+
             match = False
             for subcat in current_category.sub_categories:
                 if subcat.name == product.categories[level]:
@@ -112,32 +159,93 @@ class RestApiHandlerRec:
                     match = True
 
             if not match:
-                category_name = product.categories[level]
-                print("")
-                print("Adding " + str(category_name))
-                remote_id = self.wooApiHandler.add_category(category_name, current_category.remote_id)
+                if self.UPLOAD:
+                    category_name = product.categories[level]
+                    print("")
+                    print("Adding " + str(category_name))
 
-                if remote_id:
-                    category = Category(category_name, remote_id)
-                    current_category.sub_categories.append(category)
-                    self.add_local_product(product, level + 1, category)
+                    remote_id = self.wooApiHandler.add_category(
+                            category_name,
+                            current_category.remote_id)
 
-                    self.categories_uploaded_count += 1
+                    if remote_id:
+                        category = Category(category_name, remote_id)
+                        current_category.sub_categories.append(category)
+                        self.add_local_product(product, level + 1, category)
+                        self.categories_uploaded_count += 1
+
+    def compare_products(self, product, remote_product):
+        """
+        Compares regular price and sale price for the local product and
+        the remote product
+        """
+
+        product_price = product.product_out_price
+        remote_product_price = remote_product.product_out_price
+
+        product_discount_price = product.product_discount_price
+        remote_product_discount_price = remote_product.product_discount_price
+
+        print("")
+        print("Product price " + product_price)
+        print("Remote product price " + remote_product_price)
+
+        print("")
+        print("Product discount price " + product_discount_price)
+        print("Remote product discount price " + remote_product_discount_price)
+
+        if product_price != remote_product_price or \
+                product_discount_price != remote_product_discount_price:
+
+            print("--> price difference")
+            return True
 
     def upload_products_to_be_uploaded(self, products):
+        """
+        Uploads the products form the "products_to_be_uploaded" list
+        """
+
         count = 0
         for product in products:
             count += 1
 
         print("PRODUCTS TO BE UPLOADED: " + str(count))
 
-        remote_products = self.wooApiHandler.upload_products(products)
+        remote_products = self.wooApiHandler.upload_products(products, False)
+
+        count = 0
+        for product in remote_products:
+            if product.product_discount_price:
+                print("Product Discount Price " + product.product_discount_price)
+            count += 1
+
+        print("PRODUCTS UPLOADED: " + str(count))
+        print("")
+
+        for remote_product in remote_products:
+            self.add_remote_product(remote_product, self.root_category)
+
+        #self.print_tree()
+
+    def upload_products_to_be_updated(self, products):
+        """
+        Updates the products form the "products_to_be_updated" list
+        """
+
+        count = 0
+        for product in products:
+            count += 1
+
+        print("PRODUCTS TO BE UPDATED: " + str(count))
+
+        remote_products = self.wooApiHandler.upload_products(products, True)
 
         count = 0
         for product in remote_products:
             count += 1
 
-        print("PRODUCTS UPLOADED: " + str(count))
+        print("PRODUCTS UPDATED: " + str(count))
+        print("")
 
         for remote_product in remote_products:
             self.add_remote_product(remote_product, self.root_category)
@@ -145,9 +253,17 @@ class RestApiHandlerRec:
         #self.print_tree()
 
     def add_category_images(self):
+        """
+        Adds category images dynamically. Takes an image from a product in that category
+        """
+
         self.add_category_images2(self.root_category)
 
     def add_category_images2(self, current_category):
+        """
+        Recursive function for add_category_images
+        """
+
         sub_images = []
         current_images = []
         for subcat in current_category.sub_categories:
@@ -165,6 +281,10 @@ class RestApiHandlerRec:
         return sub_images + current_images
 
     def update_category_display2(self, current_category, level):
+        """
+        Recursive function for update_category_display
+        """
+
         self.wooApiHandler.update_category_display(current_category, level)
 
         for subcat in current_category.sub_categories:
