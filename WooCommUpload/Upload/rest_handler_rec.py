@@ -6,7 +6,7 @@ import time
 class RestApiHandlerRec:
 
     def __init__(self):
-        self.UPLOAD = True
+        self.UPLOAD = False
         self.UPDATE = True
         self.CREATE_CATEGORY_IMAGES = False
         self.UPDATE_CATEGORY_DISPLAY_TYPE = False
@@ -186,6 +186,8 @@ class RestApiHandlerRec:
         product_discount_price = product.product_discount_price
         remote_product_discount_price = remote_product.product_discount_price
 
+
+
         print("")
         print("Product price " + product_price)
         print("Remote product price " + remote_product_price)
@@ -194,8 +196,8 @@ class RestApiHandlerRec:
         print("Product discount price " + product_discount_price)
         print("Remote product discount price " + remote_product_discount_price)
 
-        if product_price != remote_product_price or \
-                product_discount_price != remote_product_discount_price:
+        if float(product_price) != float(remote_product_price) or \
+                float(product_discount_price) != float(remote_product_discount_price):
 
             print("--> price difference")
             return True
@@ -215,8 +217,8 @@ class RestApiHandlerRec:
 
         count = 0
         for product in remote_products:
-            if product.product_discount_price:
-                print("Product Discount Price " + product.product_discount_price)
+            #if product.product_discount_price:
+                #print("Product Discount Price " + product.product_discount_price)
             count += 1
 
         print("PRODUCTS UPLOADED: " + str(count))

@@ -200,7 +200,7 @@ class WooApiHandler:
         woo_product['id'] = product.remote_product_id
         woo_product['regular_price'] = product.product_out_price
 
-        if product.product_discount_price != "0.0":
+        if float(product.product_discount_price) != 0.0:
             woo_product['sale_price'] = product.product_discount_price
         else:
             woo_product['sale_price'] = ""
@@ -218,7 +218,7 @@ class WooApiHandler:
         woo_product['name'] = product.product_name
         woo_product['type'] = "simple"
         woo_product['regular_price'] = product.product_out_price
-        if product.product_discount_price != "0.0":
+        if float(product.product_discount_price) != 0.0:
             woo_product['sale_price'] = product.product_discount_price
         else:
             woo_product['sale_price'] = ""
