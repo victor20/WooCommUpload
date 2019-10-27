@@ -35,8 +35,8 @@ def upload_products(qty):
 
     for product in products:
         #add_product_img_ref(product)
-        add_product_out_price(product)
-        add_discount(product)
+        #add_product_out_price(product)
+        #add_discount(product)
         #product.print_product()
 
         if product.product_images:
@@ -56,7 +56,7 @@ def upload_products(qty):
           " WITH IMG: " + str(count_products_with_img) +
           " - WITHOUT IMG: " + str(count_products_without_img))
     print("")
-    restApiHandlerRec.upload_products(products)
+    #restApiHandlerRec.upload_products(products)
     
 
 
