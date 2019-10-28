@@ -124,19 +124,25 @@ class RestApiHandlerRec:
     def add_local_product(self, product, level, current_category):
         """
         Recursive function that:
+
         1. Adds the unique categories form the local products to the
-        WooCommerce site
+           WooCommerce site
+
         2. Creates a list of products that should be uploaded to the
-        WooCommerce site
+           WooCommerce site
+
         3. Compares the WooCommerce products with the local products
-        and if there is a difference the product is added to a list
-        with the products that should be updated
+           and if there is a difference the product is added to a list
+           with the products that should be updated
 
         Split this function to two separate functions:
+
         1. One function that adds the unique categories from the
-        local products
+           local products
+
         2. Another function that adds the products from local
-        products
+           products
+           
         """
 
         if level == len(product.categories):
