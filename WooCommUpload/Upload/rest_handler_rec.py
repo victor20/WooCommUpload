@@ -142,7 +142,7 @@ class RestApiHandlerRec:
 
         2. Another function that adds the products from local
            products
-           
+
         """
 
         if level == len(product.categories):
@@ -204,8 +204,6 @@ class RestApiHandlerRec:
 
         product_discount_price = product.product_discount_price
         remote_product_discount_price = remote_product.product_discount_price
-
-
 
         print("")
         print("Product price " + product_price)

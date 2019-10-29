@@ -16,7 +16,7 @@ MARGIN_LIMIT_FOR_DISCOUNT = 1.15
 DISCOUNT = 0.90
 
 def main():
-    upload_products(None)
+    upload_products(10)
     #delete_products()
     #update_category_display()
 
