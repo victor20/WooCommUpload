@@ -6,6 +6,7 @@ class RemoteProduct:
                  remote_product_id,
                  remote_category_id,
                  product_name,
+                 product_description,
                  remote_image_ids,
                  product_out_price):
 
@@ -13,6 +14,7 @@ class RemoteProduct:
         self.remote_product_id = remote_product_id
         self.remote_category_id = remote_category_id
         self.product_name = product_name
+        self.product_description = product_description
         self.remote_image_ids = remote_image_ids
         self.product_out_price = product_out_price
 

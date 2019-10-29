@@ -6,7 +6,7 @@ import time
 class RestApiHandlerRec:
 
     def __init__(self):
-        self.UPLOAD = False
+        self.UPLOAD = True
         self.UPDATE = True
         self.CREATE_CATEGORY_IMAGES = False
         self.UPDATE_CATEGORY_DISPLAY_TYPE = False
@@ -21,13 +21,14 @@ class RestApiHandlerRec:
         self.remote_categories_count = 0
         self.categories_uploaded_count = 0
 
-    def upload_products(self, products):
+    def upload(self, products):
         self.add_remote_categories()
         self.add_remote_products()
 
-        self.add_local_products(products)
-        self.upload_products_to_be_uploaded(self.products_to_be_uploaded)
-        self.upload_products_to_be_updated(self.products_to_be_updated)
+        if self.UPLOAD:
+            self.upload_categories(products)
+
+        self.upload_products(products)
 
         if self.CREATE_CATEGORY_IMAGES:
             self.add_category_images()
@@ -36,6 +37,7 @@ class RestApiHandlerRec:
             self.update_category_display()
 
     def update_category_display(self):
+
         """
         Updates the category display settings
         Default | Products | Products + categories etc...
@@ -47,6 +49,7 @@ class RestApiHandlerRec:
         self.update_category_display2(self.root_category, 0)
 
     def add_remote_categories(self):
+
         """
         Adds remote categories to the local category/product tree
         """
@@ -60,6 +63,7 @@ class RestApiHandlerRec:
         print("")
 
     def add_remote_categories2(self, current_category, level):
+
         """
         Recursive function for add_remote_categories
         """
@@ -76,6 +80,7 @@ class RestApiHandlerRec:
             print(str(self.remote_categories_count) + " REMOTE CATEGORIES")
 
     def add_remote_products(self):
+
         """
         Adds remote products to the local category/product tree
         """
@@ -94,6 +99,7 @@ class RestApiHandlerRec:
         self.print_tree()
 
     def add_remote_product(self, remote_product, current_category):
+
         """
         Recursive function for add_remote_products
         """
@@ -106,75 +112,28 @@ class RestApiHandlerRec:
         for subcat in current_category.sub_categories:
             self.add_remote_product(remote_product, subcat)
 
-    def add_local_products(self, products):
+    def upload_categories(self, products):
+
         """
         Uploads categories to WooCommerce that does not exist on the site.
-        Adds products to the products_to_be_uploaded  list that does not exist on site
         """
 
-        self.print_title("Adding local categories")
+        self.print_title("Uploading categories")
 
         for product in products:
-            self.add_local_product(product, 0, self.root_category)
+            self.upload_categories2(product, 0, self.root_category)
 
         print("")
         print(str(self.categories_uploaded_count) + " CATEGORIES UPLOADED")
         print("")
 
-    def add_local_product(self, product, level, current_category):
-        """
-        Recursive function that:
+    def upload_categories2(self, product, level, current_category):
 
-        1. Adds the unique categories form the local products to the
-           WooCommerce site
-
-        2. Creates a list of products that should be uploaded to the
-           WooCommerce site
-
-        3. Compares the WooCommerce products with the local products
-           and if there is a difference the product is added to a list
-           with the products that should be updated
-
-        Split this function to two separate functions:
-
-        1. One function that adds the unique categories from the
-           local products
-
-        2. Another function that adds the products from local
-           products
-
-        """
-
-        if level == len(product.categories):
-            # PRODUCTS
-
-            curent_remote_product = None
-            match = False
-            for remote_product in current_category.products:
-                if product.supplier_product_id == remote_product.supplier_product_id:
-                    curent_remote_product = remote_product
-                    match = True
-
-            if self.UPLOAD and not match:
-                product.remote_category_id = current_category.remote_id
-                self.products_to_be_uploaded.append(product)
-
-            elif self.UPDATE and match:
-                # Check difference between local and remote product and add
-                # remote product to products_to_be_updated if there is a
-                # difference
-                if self.compare_products(product, curent_remote_product):
-                    curent_remote_product.product_out_price = product.product_out_price
-                    curent_remote_product.product_discount_price = product.product_discount_price
-                    self.products_to_be_updated.append(curent_remote_product)
-
-        else:
-            # CATEGORIES
-
+        if not level == len(product.categories):
             match = False
             for subcat in current_category.sub_categories:
                 if subcat.name == product.categories[level]:
-                    self.add_local_product(product, level + 1, subcat)
+                    self.upload_categories2(product, level + 1, subcat)
                     match = True
 
             if not match:
@@ -190,36 +149,104 @@ class RestApiHandlerRec:
                     if remote_id:
                         category = Category(category_name, remote_id)
                         current_category.sub_categories.append(category)
-                        self.add_local_product(product, level + 1, category)
+                        self.upload_categories2(product, level + 1, category)
                         self.categories_uploaded_count += 1
 
+    def upload_products(self, products):
+
+        """
+        Uploads products to WooCommerce that does not exist on the site.
+        """
+
+        self.print_title("Uploading products")
+
+        for product in products:
+            self.upload_products2(product, 0, self.root_category)
+
+        self.upload_products_to_be_uploaded(self.products_to_be_uploaded)
+        self.upload_products_to_be_updated(self.products_to_be_updated)
+
+    def upload_products2(self, product, level, current_category):
+
+        if level == len(product.categories):
+            curent_remote_product = None
+            match = False
+            for remote_product in current_category.products:
+                if product.supplier_product_id == remote_product.supplier_product_id:
+                    curent_remote_product = remote_product
+                    match = True
+                    break
+
+            if self.UPLOAD and not match:
+                product.remote_category_id = current_category.remote_id
+                self.products_to_be_uploaded.append(product)
+
+            elif self.UPDATE and match:
+                # Check difference between local and remote product and add
+                # remote product to products_to_be_updated if there is a
+                # difference
+                if self.compare_products(product, curent_remote_product):
+                    curent_remote_product.product_name = product.product_name
+                    curent_remote_product.product_description = product.product_description
+                    curent_remote_product.product_out_price = product.product_out_price
+                    curent_remote_product.product_discount_price = product.product_discount_price
+                    self.products_to_be_updated.append(curent_remote_product)
+
+        else:
+            for subcat in current_category.sub_categories:
+                if subcat.name == product.categories[level]:
+                    self.upload_products2(product, level + 1, subcat)
+                    break
+
     def compare_products(self, product, remote_product):
+
         """
         Compares regular price and sale price for the local product and
         the remote product
         """
 
+        name = product.product_name
+        remote_name = remote_product.product_name
+        name_difference = False
+        if name != remote_name:
+            name_difference = True
+            print("    --> Name difference")
+
+        description = product.product_description
+        remote_description = remote_product.product_description
+        description_difference = False
+        if description != remote_description:
+            description_difference = True
+            print("    --> Description difference")
+
         product_price = product.product_out_price
         remote_product_price = remote_product.product_out_price
-
-        product_discount_price = product.product_discount_price
-        remote_product_discount_price = remote_product.product_discount_price
-
         print("")
         print("Product price " + product_price)
         print("Remote product price " + remote_product_price)
+        regular_price_difference = False
+        if float(product_price) != float(remote_product_price):
+            regular_price_difference = True
+            print("    --> Regular price difference")
 
+        product_discount_price = product.product_discount_price
+        remote_product_discount_price = remote_product.product_discount_price
         print("")
         print("Product discount price " + product_discount_price)
         print("Remote product discount price " + remote_product_discount_price)
+        discount_price_difference = False
+        if float(product_discount_price) != float(remote_product_discount_price):
+            discount_price_difference = True
+            print("    --> Discount price difference")
 
-        if float(product_price) != float(remote_product_price) or \
-                float(product_discount_price) != float(remote_product_discount_price):
-
-            print("--> price difference")
+        if name_difference or description_difference or \
+                regular_price_difference or discount_price_difference:
             return True
+        else:
+            return False
 
     def upload_products_to_be_uploaded(self, products):
+
         """
         Uploads the products form the "products_to_be_uploaded" list
         """
@@ -247,6 +274,7 @@ class RestApiHandlerRec:
         #self.print_tree()
 
     def upload_products_to_be_updated(self, products):
+
         """
         Updates the products form the "products_to_be_updated" list
         """
@@ -272,6 +300,7 @@ class RestApiHandlerRec:
         #self.print_tree()
 
     def add_category_images(self):
+
         """
         Adds category images dynamically. Takes an image from a product in that category
         """
@@ -279,6 +308,7 @@ class RestApiHandlerRec:
         self.add_category_images2(self.root_category)
 
     def add_category_images2(self, current_category):
+
         """
         Recursive function for add_category_images
         """
@@ -300,6 +330,7 @@ class RestApiHandlerRec:
         return sub_images + current_images
 
     def update_category_display2(self, current_category, level):
+
         """
         Recursive function for update_category_display
         """

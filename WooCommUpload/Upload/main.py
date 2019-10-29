@@ -13,10 +13,10 @@ MARGIN = 1.20
 
 MARGIN_LIMIT = 1.10
 MARGIN_LIMIT_FOR_DISCOUNT = 1.15
-DISCOUNT = 0.90
+DISCOUNT = 0.95
 
 def main():
-    upload_products(10)
+    upload_products(1000)
     #delete_products()
     #update_category_display()
 
@@ -34,9 +34,12 @@ def upload_products(qty):
     print("")
 
     for product in products:
-        #add_product_img_ref(product)
-        #add_product_out_price(product)
-        #add_discount(product)
+        change_product_name(product)
+        change_description(product)
+        add_product_out_price(product)
+        add_discount(product)
+        # add_product_img_ref(product)
+
         #product.print_product()
 
         if product.product_images:
@@ -56,15 +59,29 @@ def upload_products(qty):
           " WITH IMG: " + str(count_products_with_img) +
           " - WITHOUT IMG: " + str(count_products_without_img))
     print("")
-    #restApiHandlerRec.upload_products(products)
+    restApiHandlerRec.upload(products)
     
+def change_product_name(product):
+    if int(product.min_quantity) > 1:
+        name = product.product_name
+        min_quantity = product.min_quantity
 
+        text_to_append = " (" + min_quantity + " st)"
+        product.product_name = name + text_to_append
+
+def change_description(product):
+    if int(product.min_quantity) > 1:
+        description = product.product_description
+        min_quantity = product.min_quantity
+
+        text_to_append = "<p><b>OBS, förpackning " + min_quantity + " st.</b></p>"
+        product.product_description = description + text_to_append
 
 def add_product_img_ref(product):
     product.product_images = s3Handler.get_images(product.supplier_product_id)
 
 def add_product_out_price(product):
-    margin = marginExtract.get_margin(product.categories)
+    margin = marginExtract.get_markup(product.categories)
 
     """
     print("Type of product price")
@@ -113,7 +130,7 @@ def upload_product_by_id(supplier_product_id):
     products = dynamoHandler.get_product_by_id(supplier_product_id)
     for product in products:
         product.print_product()
-    restApiHandlerRec.upload_products(products)
+    restApiHandlerRec.upload(products)
 
 def update_category_display():
     restApiHandlerRec.update_category_display()

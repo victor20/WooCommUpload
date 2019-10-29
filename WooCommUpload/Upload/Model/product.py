@@ -15,6 +15,7 @@ class Product:
         self.product_eco_labels = []
         self.product_stock = ""
         self.price_quantities = []
+        self.min_quantity = ""
 
         self.remote_category_id = ""
         self.remote_product_id = ""

@@ -25,6 +25,7 @@ class WooApiHandler:
             timeout=cred.timeout)
 
         self.products_uploaded = 0
+        self.products_updated = 0
 
     def get_sub_categories(self, parent_id):
         """CHANGE WOO PAGE"""
@@ -62,6 +63,10 @@ class WooApiHandler:
                 "page": page
             }
             get_products_response = self.wcapi.get("products", params=params).json()
+
+            #TEST PRINT
+            #print(json.dumps(get_products_response, indent=4, sort_keys=True))
+
             for woo_product_item in get_products_response:
                 remote_products.append(self.create_remote_product(woo_product_item))
                 count += 1
@@ -91,6 +96,7 @@ class WooApiHandler:
             remote_product_id = woo_product_item['id'],
             remote_category_id = remote_category_id,
             product_name = html.unescape(woo_product_item['name']),
+            product_description= html.unescape(woo_product_item['description']),
             remote_image_ids = remote_image_ids,
             product_out_price = product_out_price)
 
@@ -185,12 +191,12 @@ class WooApiHandler:
 
             for woo_product in woo_products:
                 uploaded_products.append(self.create_remote_product(woo_product))
-                self.products_uploaded += 1
+                self.products_updated += 1
 
             # for uploaded_product in uploaded_products:
             #    uploaded_product.print_remote_product()
 
-            print(str(self.products_uploaded) + " TOTAL PRODUCTS UPDATED")
+            print(str(self.products_updated) + " TOTAL PRODUCTS UPDATED")
 
         return  uploaded_products
 
@@ -198,6 +204,10 @@ class WooApiHandler:
         woo_product = {}
 
         woo_product['id'] = product.remote_product_id
+        woo_product['name'] = product.product_name
+        woo_product['description'] = product.product_description
+        woo_product['short_description'] = product.product_description
+
         woo_product['regular_price'] = product.product_out_price
 
         if float(product.product_discount_price) != 0.0:
