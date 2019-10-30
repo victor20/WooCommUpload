@@ -57,7 +57,9 @@ class DynamoHandler:
             product_name = dynamo_item['productName'])
 
         product.categories = self.trim_categories(dynamo_item['categories'])
-        product.min_quantity = dynamo_item['minQuantity']
+
+        if "minQuantity" in dynamo_item.keys():
+            product.min_quantity = dynamo_item['minQuantity']
 
         product_in_price = dynamo_item['productPrice']
         product_in_price = product_in_price.replace(",", "." )

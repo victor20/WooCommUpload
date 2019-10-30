@@ -6,8 +6,10 @@ import time
 class RestApiHandlerRec:
 
     def __init__(self):
-        self.UPLOAD = True
+        self.UPLOAD = False
         self.UPDATE = True
+        self.UPDATE_MIN_QTY = True
+
         self.CREATE_CATEGORY_IMAGES = False
         self.UPDATE_CATEGORY_DISPLAY_TYPE = False
 
@@ -186,8 +188,14 @@ class RestApiHandlerRec:
                 # remote product to products_to_be_updated if there is a
                 # difference
                 if self.compare_products(product, curent_remote_product):
-                    curent_remote_product.product_name = product.product_name
-                    curent_remote_product.product_description = product.product_description
+
+                    if self.UPDATE_MIN_QTY:
+                        curent_remote_product.product_name = product.product_name
+                        curent_remote_product.product_description = product.product_description
+                    else:
+                        curent_remote_product.product_name = None
+                        curent_remote_product.product_description = None
+
                     curent_remote_product.product_out_price = product.product_out_price
                     curent_remote_product.product_discount_price = product.product_discount_price
                     self.products_to_be_updated.append(curent_remote_product)
@@ -205,19 +213,22 @@ class RestApiHandlerRec:
         the remote product
         """
 
-        name = product.product_name
-        remote_name = remote_product.product_name
         name_difference = False
-        if name != remote_name:
-            name_difference = True
-            print("    --> Name difference")
-
-        description = product.product_description
-        remote_description = remote_product.product_description
         description_difference = False
-        if description != remote_description:
-            description_difference = True
-            print("    --> Description difference")
+
+        if self.UPDATE_MIN_QTY:
+
+            name = product.product_name
+            remote_name = remote_product.product_name
+            if name != remote_name:
+                name_difference = True
+                print("    --> Name difference")
+
+            description = product.product_description
+            remote_description = remote_product.product_description
+            if description != remote_description:
+                description_difference = True
+                print("    --> Description difference")
 
         product_price = product.product_out_price
         remote_product_price = remote_product.product_out_price

@@ -27,6 +27,9 @@ class WooApiHandler:
         self.products_uploaded = 0
         self.products_updated = 0
 
+        self.PRODUCT_UPLOAD_BATCH_SIZE = 30
+        self.PRODUCT_DOWNLOAD_BATCH_SIZE = 100
+
     def get_sub_categories(self, parent_id):
         """CHANGE WOO PAGE"""
 
@@ -59,7 +62,7 @@ class WooApiHandler:
         page = 1
         while True:
             params = {
-                "per_page": "100",
+                "per_page": self.PRODUCT_DOWNLOAD_BATCH_SIZE,
                 "page": page
             }
             get_products_response = self.wcapi.get("products", params=params).json()
@@ -72,7 +75,7 @@ class WooApiHandler:
                 count += 1
             page += 1
             print("DOWLOADED " + str(count) + " PRODUCTS")
-            if len(get_products_response) < 100:
+            if len(get_products_response) < self.PRODUCT_DOWNLOAD_BATCH_SIZE:
                 break
 
         print(str(count) + " TOTAL PRODUCTS ALREADY ON SITE")
@@ -136,7 +139,7 @@ class WooApiHandler:
 
         while products:
             product_batch = []
-            for i in range(30):
+            for i in range(self.PRODUCT_UPLOAD_BATCH_SIZE):
                 if products:
                     product_batch.append(products.pop())
                 else:
@@ -204,9 +207,13 @@ class WooApiHandler:
         woo_product = {}
 
         woo_product['id'] = product.remote_product_id
-        woo_product['name'] = product.product_name
-        woo_product['description'] = product.product_description
-        woo_product['short_description'] = product.product_description
+
+        if product.product_name:
+            woo_product['name'] = product.product_name
+
+        if product.product_description:
+            woo_product['description'] = product.product_description
+            woo_product['short_description'] = product.product_description
 
         woo_product['regular_price'] = product.product_out_price
 

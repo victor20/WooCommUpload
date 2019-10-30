@@ -2,6 +2,7 @@ from WooCommUpload.Upload.dynamo_handler import *
 from WooCommUpload.Upload.s3_handler import *
 from WooCommUpload.Upload.rest_handler_rec import *
 from WooCommUpload.Margin.margin_extract import *
+import math
 
 dynamoHandler = DynamoHandler()
 s3Handler = S3Handler()
@@ -9,14 +10,13 @@ s3Handler = S3Handler()
 restApiHandlerRec = RestApiHandlerRec()
 marginExtract = MarginExtract()
 
-MARGIN = 1.20
-
-MARGIN_LIMIT = 1.10
-MARGIN_LIMIT_FOR_DISCOUNT = 1.15
-DISCOUNT = 0.95
+# 0.40
+MARGIN_LIMIT = 0.40
+# 0.75
+DISCOUNT = 0.75
 
 def main():
-    upload_products(1000)
+    upload_products(None)
     #delete_products()
     #update_category_display()
 
@@ -81,49 +81,46 @@ def add_product_img_ref(product):
     product.product_images = s3Handler.get_images(product.supplier_product_id)
 
 def add_product_out_price(product):
-    margin = marginExtract.get_markup(product.categories)
-
-    """
-    print("Type of product price")
-    print(type(product.product_in_price))
-    print("Margin")
-    print(margin)
-    print("")
-    """
-
-    print(product.supplier_product_id)
+    #markup = marginExtract.get_markup(product.categories)
+    margin = marginExtract.get_margin(product.categories)
+    in_price = product.product_in_price
 
     if margin == None:
-        margin = 1.20
-
-    elif margin < MARGIN_LIMIT:
         margin = MARGIN_LIMIT
 
-    product_out_price = product.product_in_price * margin
-    product_out_price = "{0:.2f}".format(product_out_price)
-    print("In Price: " + str(product.product_in_price))
-    print("Out Price: " + str(product_out_price))
-    print("Margin no discount (%): " + "{0:.2f}".format(margin))
-    product.product_out_price = str(product_out_price)
+    if margin < MARGIN_LIMIT:
+        margin = MARGIN_LIMIT
+
+    out_price = in_price/(1-margin)
+
+    print(product.supplier_product_id)
+    print("    Product in price: " + str(in_price))
+    #print("    Type: " + str(type(in_price)))
+
+    print("    Margin: " + str(margin))
+    #print("    Type: " + str(type(margin)))
+
+    print("    Product out price not rounded: " + "{0:.2f}".format(out_price))
+    #print("    Type: " + str(type(out_price)))
+
+    # >= 1000
+    if out_price >= 1000:
+        out_price = math.ceil(out_price / 10.0) * 10.0
+    elif out_price >= 10:
+        out_price = math.ceil(out_price / 1.0) * 1.0
+    #else:
+    #    out_price = math.ceil(out_price * 10.0) / 1.00
+
+    print("    Product out price rounded: " + "{0:.2f}".format(out_price))
+    #print("    Type: " + str(type(out_price)))
+
+    product.product_out_price = "{0:.2f}".format(out_price)
 
 
 def add_discount(product):
-    margin = float(product.product_out_price)/product.product_in_price
-
-    if margin < MARGIN_LIMIT_FOR_DISCOUNT:
-        discount = 0.00
-    else:
-        discount = DISCOUNT
-
-
-    product_discount_price = float(product.product_out_price) * discount
-    product_discount_price = "{0:.2f}".format(product_discount_price)
-    print("Discount price: " + str(product_discount_price))
-    margin_c = float(product.product_out_price) - float(product.product_out_price) * discount
-    print("Margin (kr) with discount: " + "{0:.2f}".format(margin_c))
-    margin_p = float(product.product_out_price) * discount/product.product_in_price
-    print("Margin (%) with discount: " + "{0:.2f}".format(margin_p))
-    product.product_discount_price = str(product_discount_price)
+    discount_price = float(product.product_out_price) * DISCOUNT
+    product.product_discount_price = "{0:.2f}".format(discount_price)
+    print("    Product discount price: " + product.product_discount_price)
     print("")
 
 def upload_product_by_id(supplier_product_id):
